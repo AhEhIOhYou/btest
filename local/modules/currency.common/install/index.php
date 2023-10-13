@@ -1,51 +1,50 @@
 <?php
 
 use Bitrix\Main\Loader;
+use Bitrix\Main\Localization\Loc;
 use Currency\Common\Hlb\HlbCurrency\HlbCurrency;
+use Bitrix\Main\ModuleManager;
+use Bitrix\Main\Config\Option;
+use Bitrix\Main\EventManager;
+use Bitrix\Main\Application;
+use Bitrix\Main\IO\Directory;
+
+Loc::loadMessages(__FILE__);
 
 class currency_common extends CModule
 {
-    var $MODULE_ID = "currency.common";
-    var $MODULE_VERSION;
-    var $MODULE_VERSION_DATE;
-    var $MODULE_NAME;
-    var $MODULE_DESCRIPTION;
-    var $MODULE_CSS;
+    private const MODULE_ID = "currency.common";
 
-    function __construct()
+    public function __construct()
     {
-        $arModuleVersion = array();
-        $path = str_replace("\\", "/", __FILE__);
-        $path = substr($path, 0, strlen($path) - strlen("/index.php"));
-        include($path . "/version.php");
-        if (is_array($arModuleVersion) && array_key_exists("VERSION", $arModuleVersion)) {
-            $this->MODULE_VERSION = $arModuleVersion["VERSION"];
-            $this->MODULE_VERSION_DATE = $arModuleVersion["VERSION_DATE"];
+        if (is_file(__DIR__ . '/version.php')) {
+            include_once(__DIR__ . '/version.php');
+            $this->MODULE_ID = self::MODULE_ID;
+            $this->MODULE_VERSION = $arModuleVersion['VERSION'];
+            $this->MODULE_VERSION_DATE = $arModuleVersion['VERSION_DATE'];
+            $this->MODULE_NAME = Loc::getMessage('CURRENCY_MOD_NAME');
+            $this->MODULE_DESCRIPTION = Loc::getMessage('CURRENCY_MOD_DESCRIPTION');
+        } else {
+            CAdminMessage::ShowMessage(
+                Loc::getMessage('CURRENCY_MOD_FILE_NOT_FOUND') . ' version.php'
+            );
         }
-        $this->MODULE_NAME = "Currency – модуль с компонентом";
-        $this->MODULE_DESCRIPTION = "После установки вы сможете пользоваться компонентом Currency:currency.list";
     }
 
-    function InstallFiles(): true
+    public function InstallFiles(): void
     {
-        CopyDirFiles($_SERVER["DOCUMENT_ROOT"] . "/local/modules/currency.common/install/components",
-            $_SERVER["DOCUMENT_ROOT"] . "/bitrix/components", true, true);
-        return true;
+        CopyDirFiles(
+            __DIR__ . '/components',
+            Application::getDocumentRoot() . '/local/components/' . self::MODULE_ID . '/',
+            true,
+            true
+        );
     }
 
-    function UnInstallFiles(): true
+    public function InstallDB(): void
     {
-        DeleteDirFilesEx("/local/components/currency.common");
-        return true;
-    }
-
-    function DoInstall(): void
-    {
-        $this->InstallFiles();
-        RegisterModule("currency.common");
-
         try {
-            Loader::includeModule('currency.common');
+            Loader::includeModule(self::MODULE_ID);
         } catch (\Bitrix\Main\LoaderException $e) {
             highlight_string("<?php\n\$data =\n" . var_export($e, true) . ";\n?>");
         }
@@ -53,12 +52,51 @@ class currency_common extends CModule
         try {
             HlbCurrency::createHlb();
         } catch (Exception $e) {
-            highlight_string("<?php\n\$data =\n" . var_export($e, true) . ";\n?>");
+            CAdminMessage::ShowMessage(
+                Loc::getMessage('CURRENCY_MOD_INSTALL_FAILED')
+            );
         }
+    }
+
+    public function InstallEvents(): void
+    {
+        return;
+    }
+
+    public function UnInstallFiles(): void
+    {
+        Directory::deleteDirectory(
+            Application::getDocumentRoot() . '/local/components/' . self::MODULE_ID
+        );
+        Option::delete(self::MODULE_ID);
+    }
+
+    public function UnInstallDB(): void
+    {
+        try {
+            HlbCurrency::deleteHlb();
+        } catch (Exception $e) {
+            CAdminMessage::ShowMessage(
+                Loc::getMessage('CURRENCY_MOD_UNINSTALL_FAILED')
+            );
+        }
+    }
+
+    public function UnInstallEvents(): void
+    {
+        return;
+    }
+
+    public function DoInstall(): void
+    {
+        ModuleManager::registerModule(self::MODULE_ID);
+        $this->InstallFiles();
+        $this->InstallDB();
+        $this->InstallEvents();
 
         CAgent::AddAgent(
             "UpdateCurrenciesAgent();", // имя функции
-            "currency.common", // идентификатор модуля
+            self::MODULE_ID, // идентификатор модуля
             "N",  // агент не критичен к кол-ву запусков
             60, // интервал запуска - 24 часа
             "", // дата первой проверки на запуск
@@ -69,17 +107,14 @@ class currency_common extends CModule
 
     }
 
-    function DoUninstall(): void
+    public function DoUninstall(): void
     {
-        try {
-            HlbCurrency::deleteHlb();
-        } catch (Exception $e) {
-            highlight_string("<?php\n\$data =\n" . var_export($e, true) . ";\n?>");
-        }
-
-        CAgent::RemoveAgent("UpdateCurrenciesAgent();", "currency.common");
+        CAgent::RemoveAgent("UpdateCurrenciesAgent();", self::MODULE_ID);
 
         $this->UnInstallFiles();
-        UnRegisterModule("currency.common");
+        $this->UnInstallDB();
+        $this->UnInstallEvents();
+
+        ModuleManager::unRegisterModule(self::MODULE_ID);
     }
 }

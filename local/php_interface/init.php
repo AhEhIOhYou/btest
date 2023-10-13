@@ -6,6 +6,17 @@ use Currency\Common\Api\CurrencyService\CurrencyService;
 use Currency\Common\Hlb\HlbCurrency\HlbCurrency;
 use Bitrix\Main\Loader;
 
+use Bitrix\Main\Page\Asset;
+
+$asset = Asset::getInstance();
+$asset->addJs('https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js');
+$asset->addCss('https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css');
+
+Bitrix\Main\UI\Extension::load([
+    'ajax',
+    'ui',
+]);
+
 try {
     Loader::includeModule('currency.common');
 } catch (\Bitrix\Main\LoaderException $e) {
@@ -25,8 +36,6 @@ function UpdateCurrenciesAgent() {
     foreach ($courses as $course) {
         $hlb->add($course);
     }
-
-    AddMessage2Log("Периодический BX_CRONTAB:" . BX_CRONTAB . " BX_CRONTAB_SUPPORT:" . BX_CRONTAB_SUPPORT);
 
     return "UpdateCurrenciesAgent();";
 }

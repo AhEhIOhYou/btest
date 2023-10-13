@@ -83,8 +83,11 @@ class HlbCurrency extends Hlb
 
     public function getCurrencyList($parameters = [])
     {
+        $parameters["count_total"] = true;
         $result = parent::getList($parameters);
-        return $result->fetchAll();
+        $data["data"] = $result->fetchAll();
+        $data["count_total"] = $result->getCount();
+        return $data;
     }
 }
 
