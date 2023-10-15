@@ -95,13 +95,13 @@ class currency_common extends CModule
         $this->InstallEvents();
 
         CAgent::AddAgent(
-            "UpdateCurrenciesAgent();", // имя функции
-            self::MODULE_ID, // идентификатор модуля
-            "N",  // агент не критичен к кол-ву запусков
-            60, // интервал запуска - 24 часа
-            "", // дата первой проверки на запуск
-            "Y", // агент активен
-            "", // дата первого запуска
+            "UpdateCurrenciesAgent();",
+            self::MODULE_ID,
+            "N",
+            86400,
+            date("d.m.Y H:i:s", time() + 10),
+            "Y",
+            date("d.m.Y H:i:s", time() + 10),
             30
         );
 
