@@ -14,6 +14,12 @@ class CurrencyList extends CBitrixComponent implements Controllerable
     private const DEFAULT_PAGE = 1;
     private const DEFAULT_LIMIT = 3;
 
+    private const fieldNameMap = [
+        "code" => "UF_COURSE_CODE",
+        "course" => "UF_COURSE_COURSE",
+        "date" => "UF_COURSE_DATE",
+    ];
+
     public function configureActions(): array
     {
         return [
@@ -31,15 +37,17 @@ class CurrencyList extends CBitrixComponent implements Controllerable
 
         Loader::includeModule('currency.common');
 
-        return $this->getCurrencyDataHTML($page, $sort, $direction);
+        $field = self::fieldNameMap[$sort];
+
+        return $this->getCurrencyDataHTML($page, $field, $direction);
     }
 
-    public function getCurrencyData(int $page, string $sort, string $direction): array
+    public function getCurrencyData(int $page, string $field, string $direction): array
     {
         $limit = self::DEFAULT_LIMIT;
 
         if (!$page || $page < 1) $page = self::DEFAULT_PAGE;
-        if ($sort == "") $sort = self::DEFAULT_SORT_FIELD;
+        if ($field == "") $field = self::DEFAULT_SORT_FIELD;
         if ($direction == "") $direction = self::DEFAULT_SORT_DIRECTION;
 
         $offset = ($page - 1) * $limit;
@@ -48,7 +56,7 @@ class CurrencyList extends CBitrixComponent implements Controllerable
             "offset" => $offset,
             "limit" => $limit,
             "order" => [
-                $sort => $direction,
+                $field => $direction,
             ],
         ];
 
@@ -89,7 +97,7 @@ class CurrencyList extends CBitrixComponent implements Controllerable
             return '<h2>' . Loc::getMessage('CURRENCY_EMPTY_DATE') . '</h2>';
         }
 
-        $html = '<table id="currency" class="table">
+        $html = '<table id="currency-list" class="table">
         <thead>
         <tr>
             <th scope="col">' . Loc::getMessage('CURRENCY_CODE') . '</th>
@@ -121,14 +129,15 @@ class CurrencyList extends CBitrixComponent implements Controllerable
         }
 
         $html .= '<nav id="currency-pagination">
-                <ul class="pagination justify-content-center">';
+                <div class="pagination justify-content-center">';
 
         foreach ($data["nav"] as $pageNum) {
-            $html .= '<li class="page-item' . $data["active"] == $pageNum ? 'active>' : '';
-            $html .= '<button class="page-link" data-page="' . $pageNum . '">' . $pageNum . '</button></li>';
+            $html .= '<button class="page-link';
+            $html .= $data["active"] == $pageNum ? ' active"' : '"';
+            $html .= 'data-page="' . $pageNum . '">' . $pageNum . '</button>';
         }
 
-        $html .= '</ul></nav>';
+        $html .= '</div></nav>';
 
         return $html;
     }

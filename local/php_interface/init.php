@@ -12,10 +12,8 @@ $asset = Asset::getInstance();
 $asset->addJs('https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js');
 $asset->addCss('https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css');
 
-Bitrix\Main\UI\Extension::load([
-    'ajax',
-    'ui',
-]);
+// Фикс с подключением js ядра битрикса для неавторизованных
+CUtil::InitJSCore(['ajax']);
 
 try {
     Loader::includeModule('currency.common');

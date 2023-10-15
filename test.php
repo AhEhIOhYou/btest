@@ -2,7 +2,7 @@
 
 require($_SERVER["DOCUMENT_ROOT"] . "/bitrix/header.php");
 
-UpdateCurrenciesAgent();
+//UpdateCurrenciesAgent();
 
 global $APPLICATION;
 

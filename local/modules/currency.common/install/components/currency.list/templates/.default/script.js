@@ -1,17 +1,30 @@
-BX.ready(function(){
+BX.ready(function () {
 
     let currentPage = 1,
-        currentSort = 'UF_COURSE_DATE',
+        currentSort = 'date',
         currentDirection = 'asc';
 
-    const container = document.querySelector('#currency-box');
+    const curContainer = document.getElementById('currency-box'),
+        curMain = document.getElementById('currency-main'),
+        btnSortBy = document.getElementById('currency-sort-by'),
+        btnSortDirection = document.getElementById('currency-sort-direction');
 
-    container.addEventListener('click', (evt) => {
+    curContainer.addEventListener('click', (evt) => {
         const page = evt.target.dataset.page;
         if (page) {
             currentPage = page;
             UpdateList();
         }
+    });
+
+    btnSortBy.addEventListener('change', (evt) => {
+        currentSort = btnSortBy.value;
+        UpdateList();
+    });
+
+    btnSortDirection.addEventListener('change', (evt) => {
+        currentDirection = btnSortDirection.value;
+        UpdateList();
     });
 
     function UpdateList() {
@@ -23,7 +36,7 @@ BX.ready(function(){
                 direction: currentDirection,
             },
         }).then(function (response) {
-            container.innerHTML = response.data;
+            curMain.innerHTML = response.data;
         }).catch(function (response) {
             console.log(response);
         })
